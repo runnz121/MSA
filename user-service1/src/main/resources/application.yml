@@ -1,0 +1,14 @@
+server:
+  port: 0 #포트번호를 랜덤하게 사용한다 라는 뜻
+
+spring:
+  application:
+    name: user-service
+eureka:
+  instance:
+    instance-id: ${spring.cloud.client.hostname}:${spring.application.instance-id:${random.value}} #출력을 위한 설정
+  client:
+    register-with-eureka: true # eurkea????? ?????? ??? ????? ???? ???? ??, true? ???? ?
+    fetch-registry: true
+    service-url:
+      defaultZone: http://127.0.0.1:8761/eureka #disoveryservice ?? ??

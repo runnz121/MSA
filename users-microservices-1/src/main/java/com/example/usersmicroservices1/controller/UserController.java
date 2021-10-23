@@ -3,6 +3,7 @@ package com.example.usersmicroservices1.controller;
 
 import com.example.usersmicroservices1.Service.UserService;
 import com.example.usersmicroservices1.dto.UserDto;
+import com.example.usersmicroservices1.jpa.UserEntity;
 import com.example.usersmicroservices1.vo.Greeting;
 import com.example.usersmicroservices1.vo.RequestUser;
 import com.example.usersmicroservices1.vo.ResponseUser;
@@ -14,8 +15,11 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @RestController
-@RequestMapping("/")
+@RequestMapping("/user-service")
 public class UserController {
 
     private Environment env;
@@ -31,9 +35,14 @@ public class UserController {
         this.userService = userService;
     }
 
+//    @GetMapping("/health_check")
+//    public String status(){
+//        return String.format( "It's Wokring in User Service on PORT %s",env.getProperty("local.server.port"));
+//    }
+
     @GetMapping("/health_check")
     public String status(){
-        return "It's Wokring in User Service";
+        return String.format( "It's Wokring in User Service on PORT %s",env.getProperty("local.server.port"));
     }
 
 //    @GetMapping("/welcome")
@@ -57,5 +66,32 @@ public class UserController {
         ResponseUser responseUser = mapper.map(userDto, ResponseUser.class); //response 객체로 반환해서 body에 추가하여 보냄
 
         return ResponseEntity.status(HttpStatus.CREATED).body(responseUser);
+    }
+
+
+    @GetMapping("/users")
+    public ResponseEntity<List<ResponseUser>> getUsers(){
+        Iterable<UserEntity> userList = userService.getUserByAll();
+
+        List<ResponseUser> result = new ArrayList<>();
+        userList.forEach(v -> {                 //v가 들어왔을떄( 리스트 안에 있는 각 데이터 하나 값 어떻게 할지 {} 안에 구현하ㅐ서 쓰면됨
+            result.add(new ModelMapper().map(v, ResponseUser.class));
+        });
+
+
+        return ResponseEntity.status(HttpStatus.OK).body(result);
+
+    }
+
+
+    @GetMapping("/users/{userId}")
+    public ResponseEntity<ResponseUser> getUser(@PathVariable("userId") String userId){
+
+        UserDto userDto = userService.getUserById(userId);
+
+        ResponseUser returnValue = new ModelMapper().map(userDto, ResponseUser.class);
+
+        return ResponseEntity.status(HttpStatus.OK).body(returnValue);
+
     }
 }

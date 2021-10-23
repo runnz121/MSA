@@ -3,13 +3,17 @@ package com.example.usersmicroservices1.Service;
 import com.example.usersmicroservices1.dto.UserDto;
 import com.example.usersmicroservices1.jpa.UserEntity;
 import com.example.usersmicroservices1.jpa.UserRepository;
+import com.example.usersmicroservices1.vo.ResponseOrder;
 import org.modelmapper.ModelMapper;
 import org.modelmapper.convention.MatchingStrategies;
 import org.modelmapper.spi.MatchingStrategy;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -40,5 +44,26 @@ public class UserServiceImpl implements UserService{
         UserDto returnUserDto = mapper.map(userEntity, UserDto.class);
 
         return returnUserDto;
+    }
+
+    @Override
+    public UserDto getUserById(String userId) {
+        UserEntity userEntity = userRepository.findByUserId(userId);
+
+        if (userEntity == null){
+            throw new UsernameNotFoundException("User not found");
+        }
+
+        UserDto userDto = new ModelMapper().map(userEntity, UserDto.class);
+
+        List<ResponseOrder> orders = new ArrayList<>();
+        userDto.setOrders(orders);
+
+        return userDto;
+    }
+
+    @Override
+    public Iterable<UserEntity> getUserByAll() {
+        return userRepository.findAll();
     }
 }

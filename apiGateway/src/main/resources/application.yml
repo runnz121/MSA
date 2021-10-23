@@ -22,6 +22,11 @@ spring:
             postLogger: true
 
       routes:
+        - id: user-service #user-service에 대한 라우팅 설정
+          uri: lb://USER-SERVICE # 유레카에 등록된 서비스를 적어줘야 함
+          predicates:
+              - Path=/user-service/**
+
         - id: first-service
           uri: lb://MY-FIRST-SERVICE
           predicates:

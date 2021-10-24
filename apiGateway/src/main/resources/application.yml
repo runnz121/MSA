@@ -27,6 +27,17 @@ spring:
           predicates:
               - Path=/user-service/**
 
+        - id: catalog-service #Catalog service
+          uri: lb://CATALOG-SERVICE # 유레카에 등록된 서비스를 적어줘야 함
+          predicates:
+            - Path=/catalog-service/**
+
+        - id: order-service #Catalog service
+          uri: lb://ORDER-SERVICE # 유레카에 등록된 서비스를 적어줘야 함
+          predicates:
+            - Path=/order-service/**
+
+
         - id: first-service
           uri: lb://MY-FIRST-SERVICE
           predicates:

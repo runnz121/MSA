@@ -13,6 +13,10 @@ spring:
     name: apigateway-service
 
   cloud:
+    config:
+      uri: http://127.0.0.1:8000
+      name: user-service
+
     gateway:
       default-filters:
         - name: GlobalFilter #??? ??? ??? ??
@@ -21,11 +25,47 @@ spring:
             preLogger: true
             postLogger: true
 
+
+        #        - id: user-service #user-service에 대한 라우팅 설정
+        #          uri: lb://USER-SERVICE # 유레카에 등록된 서비스를 적어줘야 함
+        #          predicates:
+        #              - Path=/user-service/**
+
+        # Security가 적용된 라우팅
       routes:
-        - id: user-service #user-service에 대한 라우팅 설정
-          uri: lb://USER-SERVICE # 유레카에 등록된 서비스를 적어줘야 함
+        #login -> no need authorization
+        - id: user-service
+          uri: lb://USER-SERVICE
           predicates:
-              - Path=/user-service/**
+            - Path=/user-service/login
+            - Method=POST
+          filters:
+            - RemoveRequestHeader=Cookie #post로 전달되는 데이터는 매번 새롭게 인식하는 것처럼 하기위해서 쿠키 제거
+            - RewritePath=/user-service/(?<segment>.*), /$\{segment} #/user-service/(?<segment>.*) 이형태로 데이터가 들어오면   /$\{segment} 이렇게 바꾸겠다
+              #이렇게 작성하게되면 더이상 controller에 RequestMapping(user-service) 안해도됨
+
+        #sign up -> no need authorization
+        - id: user-service
+          uri: lb://USER-SERVICE
+          predicates:
+            - Path=/user-service/users
+            - Method=POST
+          filters:
+            - RemoveRequestHeader=Cookie
+            - RewritePath=/user-service/(?<segment>.*), /$\{segment}
+
+
+        #need authorization
+        - id: user-service
+          uri: lb://USER-SERVICE
+          predicates:
+            - Path=/user-service/**
+            - Method=GET
+          filters:
+            - RemoveRequestHeader=Cookie
+            - RewritePath=/user-service/(?<segment>.*), /$\{segment}
+            - AuthorizationHeaderFilter # write class name to add filter!!!!!!!!!!!!
+
 
         - id: catalog-service #Catalog service
           uri: lb://CATALOG-SERVICE # 유레카에 등록된 서비스를 적어줘야 함
@@ -60,3 +100,8 @@ spring:
                  baseMessage: Logging, filter.
                  preLogger: true
                  postLogger: true
+
+# jwt 복호화를 위해 user-service에서 갖고옴
+token:
+  expiration_time: 86400000
+  secret: user_token

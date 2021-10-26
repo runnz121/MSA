@@ -67,6 +67,17 @@ spring:
             - AuthorizationHeaderFilter # write class name to add filter!!!!!!!!!!!!
 
 
+        #actuator 추가
+        - id: user-service
+          uri: lb://USER-SERVICE
+          predicates:
+            - Path=/user-service/actuator/**
+            - Method=GET,POST
+          filters:
+            - RemoveRequestHeader=Cookie
+            - RewritePath=/user-service/(?<segment>.*), /$\{segment}
+
+
         - id: catalog-service #Catalog service
           uri: lb://CATALOG-SERVICE # 유레카에 등록된 서비스를 적어줘야 함
           predicates:
@@ -105,3 +116,11 @@ spring:
 token:
   expiration_time: 86400000
   secret: user_token
+
+
+#actuator 정보 추가
+management:
+  endpoints:
+    web:
+      exposure:
+        include: refresh, health, beans, httptrace

@@ -31,6 +31,15 @@ logging:
   level:
     com.example.userservice: DEBUG
 
-token:
-  expiration_time: 86400000
-  secret: user_token
+
+#actuator 정보 추가
+management:
+  endpoints:
+    web:
+      exposure:
+        include: refresh, health, beans
+
+# cloud service config로부터 정보를 갖고올것임
+#token:
+#  expiration_time: 86400000
+#  secret: user_token

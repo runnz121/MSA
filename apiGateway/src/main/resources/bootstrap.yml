@@ -2,8 +2,8 @@ spring:
   cloud:
     config:
       uri: http://127.0.0.1:8888
-      name: ecommerce #repo에 있는 이름
+      name: config-service #repo에 있는 이름
 
-  profiles:
-    active: prod
+#  profiles:
+#    active: prod
 

@@ -2,7 +2,7 @@ spring:
   cloud:
     config:
       uri: http://127.0.0.1:8888
-      name: config-service #repo에 있는 이름
+      name: user-service #repo에 있는 이름(읽어올 환경 파일 이름)
 
   # ecommerce-dev 가 적용되게끔 설정
 #  profiles:

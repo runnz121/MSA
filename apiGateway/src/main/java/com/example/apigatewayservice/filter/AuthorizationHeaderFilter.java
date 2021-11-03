@@ -49,7 +49,7 @@ public class AuthorizationHeaderFilter extends AbstractGatewayFilterFactory<Auth
             String authorizationHeader = request.getHeaders().get(HttpHeaders.AUTHORIZATION).get(0);
 
             //토큰은 string값으로 들어옴 -> Bearer dasasdfasd 이런식으로 들어옴으로 이 Bearer부분을 없에주고 토큰값만 비교
-            String jwt = authorizationHeader.replace("Bearer ", "");
+            String jwt = authorizationHeader.replace("Bearer", "");
 
             if(!isJwtValid(jwt)) {
                 return onError(exchange, "Jwt token is not valid", HttpStatus.UNAUTHORIZED);

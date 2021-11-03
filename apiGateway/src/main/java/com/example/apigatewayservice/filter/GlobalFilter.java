@@ -22,14 +22,15 @@ public class GlobalFilter extends AbstractGatewayFilterFactory<GlobalFilter.Conf
 
     @Override
     public GatewayFilter apply(Config config) {
-        return (exchange, chain)-> {
+        return ((exchange, chain)-> {
             ServerHttpRequest request = exchange.getRequest();
             ServerHttpResponse response = exchange.getResponse();
 
-            //pre필터 적용
-            log.info("Custom PRE filter baseMessage: request id-> {}", config.getBaseMessage());
+//            //pre필터 적용
+//            log.info("Custom PRE filter baseMessage: request id-> {}", config.getBaseMessage());
 
-            if (config.isPreLogger()){
+            log.info("Global Filter baseMessage: {}, {}", config.getBaseMessage(), request.getRemoteAddress())
+;            if (config.isPreLogger()){
                 log.info("Global Filter start: request id -> {}", request.getId());
             }
 
@@ -40,7 +41,7 @@ public class GlobalFilter extends AbstractGatewayFilterFactory<GlobalFilter.Conf
                     log.info("Global Filter start: request id -> {}", response.getStatusCode());
                 }
             }));
-        };
+        });
     }
 
     @Data

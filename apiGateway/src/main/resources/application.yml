@@ -18,9 +18,9 @@ spring:
     password: guest
 
   cloud:
-    config:
-      uri: http://127.0.0.1:8000
-      name: user-service
+#    config:
+#      uri: http://127.0.0.1:8000
+#      name: user-service
 
     gateway:
       default-filters:

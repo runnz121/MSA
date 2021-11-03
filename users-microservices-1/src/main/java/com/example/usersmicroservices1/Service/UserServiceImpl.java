@@ -1,28 +1,44 @@
 package com.example.usersmicroservices1.Service;
 
+import com.example.usersmicroservices1.client.OrderServiceClient;
 import com.example.usersmicroservices1.dto.UserDto;
 import com.example.usersmicroservices1.jpa.UserEntity;
 import com.example.usersmicroservices1.jpa.UserRepository;
 import com.example.usersmicroservices1.vo.ResponseOrder;
+import feign.FeignException;
+import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
 import org.modelmapper.convention.MatchingStrategies;
 import org.modelmapper.spi.MatchingStrategy;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.core.env.Environment;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
 @Service
+@Slf4j
 public class UserServiceImpl implements UserService{
 
     UserRepository userRepository;
     BCryptPasswordEncoder passwordEncoder;
+
+    //추가로 주입받음
+    Environment env;
+    RestTemplate restTemplate;
+
+    //@feign client사용한 service inteface
+    OrderServiceClient orderServiceClient;
 
     //userservicedetials 구현
     //username == email
@@ -43,12 +59,18 @@ public class UserServiceImpl implements UserService{
 
 
 
-
-
     @Autowired //스프링이 기동되면서 등록할 수 있는 빈을 찾아서 메모리에 생성해주는 것이다.
-    public UserServiceImpl(UserRepository userRepository, BCryptPasswordEncoder passwordEncoder){ //이것도 초기화가 되어있어야 주입이 되는데 주입이 안되면 에러남
+    public UserServiceImpl(UserRepository userRepository,
+                           BCryptPasswordEncoder passwordEncoder,
+                           Environment env,
+                           OrderServiceClient orderServiceClient, //order-service 주입 -> feign client
+                           RestTemplate restTemplate){ //이것도 초기화가 되어있어야 주입이 되는데 주입이 안되면 에러남
+
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
+        this.env = env;
+        this.orderServiceClient = orderServiceClient;
+        this.restTemplate = restTemplate;
     }
 
     @Override
@@ -78,8 +100,37 @@ public class UserServiceImpl implements UserService{
 
         UserDto userDto = new ModelMapper().map(userEntity, UserDto.class);
 
-        List<ResponseOrder> orders = new ArrayList<>();
-        userDto.setOrders(orders);
+        /*
+        Rest Template 코드는 더이상 사용되지 않을것 ->@feign client가 대체 주석처리
+         */
+//        //List<ResponseOrder> orders = new ArrayList<>();
+//        //orderservice의 controller에서 getmapping으로 선언된, 오더 정보를 갖고옴
+//        //user-service.yml파일의 값을 갖고옴
+//        String orderUrl = String.format(env.getProperty("order_service.url"),userId);
+//        //주소값, 요청방식, 파라미터전달값, 어떤형식으로 전달 받을 것인지 -> 여기에 써있는 값들은
+//        //order service의 controller의 getOrder부분의 값을 그대로 반환한 것이다.
+//        ResponseEntity<List<ResponseOrder>> orderListResponse = restTemplate.exchange(orderUrl, HttpMethod.GET, null,
+//                new ParameterizedTypeReference<List<ResponseOrder>>() {
+//        });
+//        //resposneorder타입으로 바꾸기
+//        List<ResponseOrder> orderList = orderListResponse.getBody();
+
+
+        /**
+         * Fegin client 용 코드
+         **/
+
+        /*Feign Exception Handling*/
+//        List<ResponseOrder> orderList = null;
+//        try {
+//            orderServiceClient.getOrders(userId);
+//        } catch (FeignException ex){
+//            log.error(ex.getMessage());
+//        }
+
+        /*feign error decoder로 예외처리*/
+        List<ResponseOrder> orderList = orderServiceClient.getOrders(userId);
+        userDto.setOrders(orderList);
 
         return userDto;
     }

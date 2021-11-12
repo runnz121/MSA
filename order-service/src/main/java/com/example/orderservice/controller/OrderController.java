@@ -4,6 +4,7 @@ package com.example.orderservice.controller;
 import com.example.orderservice.dto.OrderDto;
 import com.example.orderservice.jpa.OrderEntity;
 import com.example.orderservice.messageque.KafkaProducer;
+import com.example.orderservice.messageque.OrderProducer;
 import com.example.orderservice.service.OrderService;
 import com.example.orderservice.vo.RequestOrder;
 import com.example.orderservice.vo.ResponseOrder;
@@ -17,6 +18,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/order-service")
@@ -27,13 +29,16 @@ public class OrderController {
     private OrderService orderService;
     //kafka 주입
     private KafkaProducer kafkaProducer;
+    //kafka order 전달
+    private OrderProducer orderProducer;
 
 
     @Autowired
-    public OrderController(Environment env, OrderService orderService, KafkaProducer kafkaProducer ) {
+    public OrderController(Environment env, OrderService orderService, KafkaProducer kafkaProducer, OrderProducer orderProducer ) {
         this.env = env;
         this.orderService = orderService;
         this.kafkaProducer = kafkaProducer;
+        this.orderProducer = orderProducer;
     }
 
     @GetMapping("/health_check")
@@ -48,15 +53,23 @@ public class OrderController {
         ModelMapper mapper = new ModelMapper();
         mapper.getConfiguration().setMatchingStrategy(MatchingStrategies.STRICT); //mapper환경설정해주고
 
-        /* JPA */
+
         OrderDto orderDto = mapper.map(order, OrderDto.class); //모델 멥퍼로 request user -> userdto로 변환
         orderDto.setUserId(userId);
-        OrderDto createOrder = orderService.createOrder(orderDto); //서비스로 전달
 
-        ResponseOrder responseOrder = mapper.map(orderDto, ResponseOrder.class); //response 객체로 반환해서 body에 추가하여 보냄
+//        /* JPA */
+//        OrderDto createOrder = orderService.createOrder(orderDto); //서비스로 전달
+//        ResponseOrder responseOrder = mapper.map(orderDto, ResponseOrder.class); //response 객체로 반환해서 body에 추가하여 보냄
+
+        /* kafka */
+        //사용자가 전달했던 주문 정보를 갖고옴
+        orderDto.setOrderId(UUID.randomUUID().toString());
+        orderDto.setTotalPrice(order.getQty() * order.getUnitPrice());
 
         /* send this order to the kafka */
         kafkaProducer.send("example-catalog-topic", orderDto);
+        orderProducer.send("orders", orderDto);//->kafaka로 데이터를 전달할 메시지 추가 -> 사용자 주문정보를 토픽으로 전달
+        ResponseOrder responseOrder = mapper.map(orderDto, ResponseOrder.class);
 
 
         return ResponseEntity.status(HttpStatus.CREATED).body(responseOrder);

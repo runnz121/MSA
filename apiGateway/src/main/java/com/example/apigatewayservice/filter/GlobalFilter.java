@@ -31,14 +31,14 @@ public class GlobalFilter extends AbstractGatewayFilterFactory<GlobalFilter.Conf
 
             log.info("Global Filter baseMessage: {}, {}", config.getBaseMessage(), request.getRemoteAddress())
 ;            if (config.isPreLogger()){
-                log.info("Global Filter start: request id -> {}", request.getId());
+                log.info("Global Pre Filter start: request id -> {}", request.getId());
             }
 
 
-            //post 필터 적용
+            //post 필터 적용 응답에 관한 작용
             return chain.filter(exchange).then(Mono.fromRunnable(()-> {
                 if (config.isPostLogger()){
-                    log.info("Global Filter start: request id -> {}", response.getStatusCode());
+                    log.info("Global Post Filter start: request id -> {}", response.getStatusCode());
                 }
             }));
         });

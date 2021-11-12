@@ -15,7 +15,9 @@ spring:
     config:
       server:
         native:
-          search-locations: file:///C:\Users\runnz\sample_repo
+          search-locations: file:///Users/pupu/Desktop/study/java/msa-config
+#            search-locations: file:///Users/dowonlee/Desktop/Work/native-file-repo
+#          search-locations: file:///C:\Users\runnz\sample_repo
           ##file://${user:home}/C:\myproject\MSA_Service_prac\config-git:
         git:
           uri: file://C:\myproject\MSA_Service_prac\config-git #yml file directory that i designated location of git add

@@ -11,10 +11,13 @@ import org.modelmapper.ModelMapper;
 import org.modelmapper.convention.MatchingStrategies;
 import org.modelmapper.spi.MatchingStrategy;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cloud.client.circuitbreaker.CircuitBreaker;
+import org.springframework.cloud.client.circuitbreaker.CircuitBreakerFactory;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.core.env.Environment;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
+
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -40,6 +43,9 @@ public class UserServiceImpl implements UserService{
     //@feign client사용한 service inteface
     OrderServiceClient orderServiceClient;
 
+    //circuitbreaker 주입
+    CircuitBreakerFactory circuitBreakerFactory;
+
     //userservicedetials 구현
     //username == email
     @Override
@@ -64,13 +70,15 @@ public class UserServiceImpl implements UserService{
                            BCryptPasswordEncoder passwordEncoder,
                            Environment env,
                            OrderServiceClient orderServiceClient, //order-service 주입 -> feign client
-                           RestTemplate restTemplate){ //이것도 초기화가 되어있어야 주입이 되는데 주입이 안되면 에러남
+                           RestTemplate restTemplate, //이것도 초기화가 되어있어야 주입이 되는데 주입이 안되면 에러남
+                           CircuitBreakerFactory circuitBreakerFactory){
 
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.env = env;
         this.orderServiceClient = orderServiceClient;
         this.restTemplate = restTemplate;
+        this.circuitBreakerFactory = circuitBreakerFactory;
     }
 
     @Override
@@ -128,10 +136,19 @@ public class UserServiceImpl implements UserService{
 //            log.error(ex.getMessage());
 //        }
 
-        /*feign error decoder로 예외처리*/
-        List<ResponseOrder> orderList = orderServiceClient.getOrders(userId);
-        userDto.setOrders(orderList);
 
+        /**
+         * circuit breaker로 에러 처리하기 위해 주석 처리
+         */
+        /*feign error decoder로 예외처리*/
+        //List<ResponseOrder> orderList = orderServiceClient.getOrders(userId);
+
+        //서킷 브레이커 생성
+        CircuitBreaker circuitBreaker = circuitBreakerFactory.create("circuitbreaker");
+        //서킷 브레이커 호출
+        List<ResponseOrder> orderList = circuitBreaker.run(() -> orderServiceClient.getOrders(userId),
+                throwable -> new ArrayList<>());//문제 생겼을시 여기에 선언한 것으로 반환환
+        userDto.setOrders(orderList);
         return userDto;
     }
 

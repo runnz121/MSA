@@ -58,18 +58,20 @@ public class OrderController {
         orderDto.setUserId(userId);
 
 //        /* JPA */
-//        OrderDto createOrder = orderService.createOrder(orderDto); //서비스로 전달
-//        ResponseOrder responseOrder = mapper.map(orderDto, ResponseOrder.class); //response 객체로 반환해서 body에 추가하여 보냄
+        //서킷 브레이커 테스트
+        OrderDto createOrder = orderService.createOrder(orderDto); //서비스로 전달
+        ResponseOrder responseOrder = mapper.map(orderDto, ResponseOrder.class); //response 객체로 반환해서 body에 추가하여 보냄
 
         /* kafka */
         //사용자가 전달했던 주문 정보를 갖고옴
-        orderDto.setOrderId(UUID.randomUUID().toString());
-        orderDto.setTotalPrice(order.getQty() * order.getUnitPrice());
+//        orderDto.setOrderId(UUID.randomUUID().toString());
+//        orderDto.setTotalPrice(order.getQty() * order.getUnitPrice());
 
         /* send this order to the kafka */
-        kafkaProducer.send("example-catalog-topic", orderDto);
-        orderProducer.send("orders", orderDto);//->kafaka로 데이터를 전달할 메시지 추가 -> 사용자 주문정보를 토픽으로 전달
-        ResponseOrder responseOrder = mapper.map(orderDto, ResponseOrder.class);
+        //서킷 브레이커 테스트 를 위한 카프카 주석코드 주석처리
+//        kafkaProducer.send("example-catalog-topic", orderDto);
+//        orderProducer.send("orders", orderDto);//->kafaka로 데이터를 전달할 메시지 추가 -> 사용자 주문정보를 토픽으로 전달
+//        ResponseOrder responseOrder = mapper.map(orderDto, ResponseOrder.class);
 
 
         return ResponseEntity.status(HttpStatus.CREATED).body(responseOrder);

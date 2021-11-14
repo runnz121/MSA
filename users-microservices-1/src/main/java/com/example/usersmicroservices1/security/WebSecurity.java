@@ -37,7 +37,9 @@ public class WebSecurity extends WebSecurityConfigurerAdapter {
         //http.authorizeRequests().antMatchers("/users/**").permitAll();
         http.authorizeRequests().antMatchers("/**","/users/**","/actuator/**").permitAll(); //actuator는 모두 통과
         http.authorizeRequests().antMatchers("/**") //모든 코드를 통과시키지 않음
-                .hasIpAddress("127.0.0.1")//아이피 제약조건 설정
+                .access("hasIpAddress('127.0.0.1') or hasIpAddress('192.168.219.108')")
+//                .hasIpAddress("127.0.0.1")//아이피 제약조건 설정
+//                .hasIpAddress("192.168.219.108")
                 .and()
                         .addFilter(getAuthenticationFilter()); //필터를 추가 -> 이 필터를 통과하면 그제서야 서비스 이용가능
 

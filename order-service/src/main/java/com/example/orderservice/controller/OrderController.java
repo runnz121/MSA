@@ -8,6 +8,8 @@ import com.example.orderservice.messageque.OrderProducer;
 import com.example.orderservice.service.OrderService;
 import com.example.orderservice.vo.RequestOrder;
 import com.example.orderservice.vo.ResponseOrder;
+import jdk.jshell.spi.ExecutionControlProvider;
+import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
 import org.modelmapper.convention.MatchingStrategies;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,6 +24,7 @@ import java.util.UUID;
 
 @RestController
 @RequestMapping("/order-service")
+@Slf4j
 public class OrderController {
 
 
@@ -50,6 +53,9 @@ public class OrderController {
     //kafka 에 메시지를 전달하는 코드 추가
     @PostMapping("/{userId}/orders")
     public ResponseEntity<ResponseOrder> createOrder(@PathVariable("userId") String userId, @RequestBody RequestOrder order){ //requestUser를 받아서 파라미터로 받음
+
+        //feign client가 언제 호출하는지 확인해보는 로그
+        log.info("Before retrieve orders microservice");
         ModelMapper mapper = new ModelMapper();
         mapper.getConfiguration().setMatchingStrategy(MatchingStrategies.STRICT); //mapper환경설정해주고
 
@@ -73,7 +79,8 @@ public class OrderController {
 //        orderProducer.send("orders", orderDto);//->kafaka로 데이터를 전달할 메시지 추가 -> 사용자 주문정보를 토픽으로 전달
 //        ResponseOrder responseOrder = mapper.map(orderDto, ResponseOrder.class);
 
-
+        //feign client가 언제 호출하는지 확인해보는 로그
+        log.info("After retrieve orders microservice");
         return ResponseEntity.status(HttpStatus.CREATED).body(responseOrder);
     }
 
@@ -82,13 +89,28 @@ public class OrderController {
 
 
     @GetMapping("/{userId}/orders")
-    public ResponseEntity<List<ResponseOrder>> getOrder(@PathVariable("userId") String userId){
+    public ResponseEntity<List<ResponseOrder>> getOrder(@PathVariable("userId") String userId) throws Exception {
+
+        //feign client가 언제 호출하는지 확인해보는 로그
+        log.info("Before retrieve orders microservice");
         Iterable<OrderEntity> orderList = orderService.getOrdersByUserId(userId);
 
         List<ResponseOrder> result = new ArrayList<>();
         orderList.forEach(v -> {
             result.add(new ModelMapper().map(v, ResponseOrder.class));
         });
+
+//        //강제 오류 발생
+//        try {
+//            Thread.sleep(1000);
+//            throw new Exception("장애 발생");
+//        } catch(InterruptedException ex){
+//            log.warn(ex.getMessage());
+//        }
+
+
+        //feign client가 언제 호출하는지 확인해보는 로그
+        log.info("After retrieve orders microservice");
 
         return ResponseEntity.status(HttpStatus.OK).body(result);
     }

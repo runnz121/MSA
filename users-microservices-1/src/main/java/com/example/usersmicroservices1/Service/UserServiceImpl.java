@@ -143,11 +143,18 @@ public class UserServiceImpl implements UserService{
         /*feign error decoder로 예외처리*/
         //List<ResponseOrder> orderList = orderServiceClient.getOrders(userId);
 
+
+        //feign client가 언제 호출하는지 확인해보는 로그
+        log.info("Befoe call orders microservice");
         //서킷 브레이커 생성
         CircuitBreaker circuitBreaker = circuitBreakerFactory.create("circuitbreaker");
         //서킷 브레이커 호출
         List<ResponseOrder> orderList = circuitBreaker.run(() -> orderServiceClient.getOrders(userId),
                 throwable -> new ArrayList<>());//문제 생겼을시 여기에 선언한 것으로 반환환
+
+        //feign client가 언제 호출하는지 확인해보는 로그
+        log.info("After call orders microservices");
+
         userDto.setOrders(orderList);
         return userDto;
     }
